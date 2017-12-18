@@ -141,7 +141,7 @@ Server::Server(const std::string &config_path) {
     Skagway::Json config;
     bool success;
 
-    success = parse_config_file("config.json", config);
+    success = parse_config_file(config_path, config);
     if (!success) {
         //TODO Handle error
         fprintf(stderr, "Error: Server: Can not find config file\n");
