@@ -63,7 +63,7 @@ bool ip_is_equal(const Conn &self, const Conn &r) {
 void IPConn(Conn &self, const Socket *socket, uint32_t addr, unsigned short port) {
     self.construct(socket, 0);
 
-    static_assert(AF_INET != Conn::invalid);
+    static_assert(AF_INET != Conn::invalid, "Use another value for Conn:invalid");
     self.type = AF_INET;
     self.cont.IPCont.addr = addr;
     self.cont.IPCont.port = port;

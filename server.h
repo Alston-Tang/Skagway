@@ -27,7 +27,7 @@ class Server {
     static const uint32_t client_expire_time = 10 * ms_per_s;
     static const uint32_t socket_total_wait_time = 200 * us_per_ms;
 
-    static_assert(socket_total_wait_time < 1 * ms_per_s * us_per_ms);
+    static_assert(socket_total_wait_time < 1 * ms_per_s * us_per_ms, "socket_total_wait_time can not be longer than 1s");
 
     Conn connections[max_client];
     Socket **sockets;
