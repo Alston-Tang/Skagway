@@ -57,6 +57,15 @@ if(CXXTEST_FOUND)
             COMMAND ${CMAKE_COMMAND} -E copy
             ${CMAKE_SOURCE_DIR}/test/maxresdefault.jpg
             ${CMAKE_CURRENT_BINARY_DIR}/maxresdefault.jpg)
+    add_custom_command(
+            TARGET server_test PRE_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_SOURCE_DIR}/test/images/
+            ${CMAKE_CURRENT_BINARY_DIR}/images/)
+    add_custom_command(
+            TARGET server_test PRE_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory
+            ${CMAKE_CURRENT_BINARY_DIR}/capture)
 
     add_library(FakeClient test/fake_client.cpp test/fake_client.h)
     target_link_libraries(FakeClient Socket Utility)

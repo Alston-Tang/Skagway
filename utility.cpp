@@ -40,7 +40,7 @@ bool parse_config_file(const std::string &file_path, Json &json) {
 
     if (!err.empty()) {
         //TODO Handle Error
-        fprintf(stderr, "Error: json.parse: %s\n", err);
+        fprintf(stderr, "Error: json.parse: %s\n", err.c_str());
         return false;
     }
 

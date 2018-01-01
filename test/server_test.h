@@ -5,6 +5,12 @@
 #include <cxxtest/TestSuite.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <iostream>
+#include <fstream>
+#include <thread>
+#include <chrono>
+#include <sstream>
+#include <iomanip>
 #include "../utility.h"
 #include "../server.h"
 #include "../protocol.h"
@@ -17,9 +23,25 @@ in_addr localhost;
 class ServerTest : public CxxTest::TestSuite
 {
     static void testSendImgAllCameraThread(Skagway::Test::MockCamera *camera) {
-        for (int i = 0; i < 10; i++) {
-            camera->send_mock_img(static_cast<char>('a' + i), static_cast<uint32_t>(i));
-            sleep(1);
+        auto img_buffer = new char[512 * 1024];
+        for (unsigned int i = 0; i < 300; i++) {
+            std::stringstream img_path;
+            img_path << "images/" << std::setw(6) << std::setfill('0') << i + 1 << ".jpeg";
+            std::ifstream img(img_path.str(), std::ifstream::binary);
+            if (!img.is_open()) {
+                fprintf(stderr, "Can not open image\n");
+                fprintf(stderr, "%s\n", img_path.str().c_str());
+                exit(-1);
+            }
+            img.read(img_buffer, 512 * 1024);
+            if (!img.eofbit) {
+                fprintf(stderr, "Image too large\n");
+                exit(-1);
+            }
+            img.close();
+            auto img_size = static_cast<size_t>(img.gcount());
+            camera->send_mock_img(img_buffer, img_size, Skagway::current_time(), i);
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000 / 30));
         }
     }
     static void testSendImgAllMaxRes(Skagway::Test::MockCamera *camera) {
@@ -37,12 +59,15 @@ class ServerTest : public CxxTest::TestSuite
 public:
     Skagway::Server *server = nullptr;
 
+
+
     void setUp() override {
         inet_aton("127.0.0.1", &localhost);
         this->server = new Skagway::Server("test_config_1.json");
         //2s timeout
         client_timeout.tv_sec = 2;
         client_timeout.tv_usec = 0;
+
     }
 
     void tearDown() override {
@@ -57,10 +82,19 @@ public:
         Skagway::IPConn(conn_server1, &client_socket, htonl(localhost.s_addr), 12345);
         Skagway::Test::FakeClient client(&client_socket, conn_server1);
 
+        char buffer[sizeof(Skagway::KeepAliveS)];
+        std::ofstream out("capture/KeepAliveS.cap", std::ofstream::binary);
+
         this->server->start_loop();
         TS_ASSERT_EQUALS(client.send_keep_alive(), true);
-        TS_ASSERT_EQUALS(client.expect_keep_alive_response(), true);
+        TS_ASSERT_EQUALS(client.expect_keep_alive_response(buffer), true);
+
+        if (out.is_open()) {
+            out.write(buffer, sizeof(buffer));
+        }
         this->server->stop_loop();
+
+        out.close();
 
         TS_ASSERT_EQUALS(client.send_keep_alive(), true);
         TS_ASSERT_EQUALS(client.expect_keep_alive_response(), false);
@@ -138,6 +172,18 @@ public:
             if (rv < 0) break;
             else if (rv <= sizeof(Skagway::KeepAliveS)) continue;
             auto cur_frame_seq = static_cast<int>(ntohl(packet->frame_seq));
+            if (cur_frame_seq == 123) {
+                uint16_t frag_seq = ntohs(packet->cur_frag);
+                std::stringstream cap_path;
+                cap_path << "capture/" << frag_seq << ".cap";
+                std::ofstream out(cap_path.str(), std::ofstream::binary);
+
+                if (out.is_open()) {
+                    out.write((char *) buffer, rv);
+                }
+
+                out.close();
+            }
             if (cur_frame_seq > frame_count) {
                 frame_count = ntohl(packet->frame_seq);
             }
@@ -145,7 +191,7 @@ public:
         t.join();
         server->stop_loop();
 
-        TS_ASSERT_LESS_THAN_EQUALS(9, frame_count);
+        TS_ASSERT_LESS_THAN_EQUALS(270, frame_count);
 
 
 
