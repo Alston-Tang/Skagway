@@ -76,6 +76,7 @@ void Server::send_img_all(void *data, size_t size, uint32_t time, uint32_t seq) 
         size_t data_size = offset + frag_max_size <= size ? frag_max_size : size - offset;
 
         memcpy(packet->data, data_head + offset, data_size);
+        offset += data_size;
         packet->cur_frag = htons(cur_frag);
 
         for (auto &conn : this->connections) {
