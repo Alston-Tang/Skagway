@@ -172,10 +172,10 @@ public:
             if (rv < 0) break;
             else if (rv <= sizeof(Skagway::KeepAliveS)) continue;
             auto cur_frame_seq = static_cast<int>(ntohl(packet->frame_seq));
-            if (cur_frame_seq == 123) {
+            {
                 uint16_t frag_seq = ntohs(packet->cur_frag);
                 std::stringstream cap_path;
-                cap_path << "capture/" << frag_seq << ".cap";
+                cap_path << "capture/frame_" <<cur_frame_seq << "_frag_" << frag_seq << ".cap";
                 std::ofstream out(cap_path.str(), std::ofstream::binary);
 
                 if (out.is_open()) {
