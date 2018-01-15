@@ -10,6 +10,31 @@
 
 namespace Skagway {
 
+void Server::init(const Skagway::Json &config) {
+    auto &sockets = config["sockets"].array_items();
+
+    size_t num_sockets = sockets.size();
+    this->sockets_len = num_sockets;
+    this->sockets = new Socket*[num_sockets];
+    size_t  idx = 0;
+
+    timeval socket_timeout{0, socket_total_wait_time / static_cast<int>(sockets_len)};
+
+
+    for (auto &socket : sockets) {
+        std::string type = socket["type"].string_value();
+        unsigned short port = static_cast<unsigned short>(socket["port"].int_value());
+        if (type == "ip") {
+            auto *sock = new IPSocket(port);
+            sock->set_recv_timeout(socket_timeout);
+            this->sockets[idx] = sock;
+        }
+        idx++;
+    }
+
+    this->stop = true;
+    this->main_loop_thread = nullptr;
+}
 
 bool Server::create_conn(Conn &conn) {
     size_t idx = invalid_idx;
@@ -138,6 +163,10 @@ void Server::main_loop() {
     }
 }
 
+Server::Server(Skagway::Json &config) {
+    this->init(config);
+}
+
 Server::Server(const std::string &config_path) {
     Skagway::Json config;
     bool success;
@@ -149,29 +178,7 @@ Server::Server(const std::string &config_path) {
         exit(-1);
     }
 
-    auto &sockets = config["sockets"].array_items();
-    
-    size_t num_sockets = sockets.size();
-    this->sockets_len = num_sockets;
-    this->sockets = new Socket*[num_sockets];
-    size_t  idx = 0;
-
-    timeval socket_timeout{0, socket_total_wait_time / static_cast<int>(sockets_len)};
-
-    
-    for (auto &socket : sockets) {
-        std::string type = socket["type"].string_value();
-        unsigned short port = static_cast<unsigned short>(socket["port"].int_value());
-        if (type == "ip") {
-            auto *sock = new IPSocket(port);
-            sock->set_recv_timeout(socket_timeout);
-            this->sockets[idx] = sock;
-        }
-        idx++;
-    }
-
-    this->stop = true;
-    this->main_loop_thread = nullptr;
+    this->init(config);
 }
 
 void Server::start_loop() {
@@ -194,6 +201,5 @@ void Server::stop_loop() {
 void Server::run_loop(Server *server) {
     server->main_loop();
 }
-
 
 }

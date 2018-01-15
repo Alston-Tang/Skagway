@@ -12,6 +12,7 @@
 #include <thread>
 #include "conn.h"
 #include "socket.h"
+#include "utility.h"
 
 #define MAX_CLIENT 1
 
@@ -35,6 +36,7 @@ class Server {
     bool stop;
     std::thread *main_loop_thread;
 
+    void init(const Skagway::Json &config);
     bool create_conn(Conn &conn);
     void close_conn(size_t conn_idx);
     void refresh_conn(size_t conn_idx);
@@ -43,6 +45,7 @@ class Server {
     static void run_loop(Server *server);
 
 public:
+    explicit Server(Skagway::Json &config);
     explicit Server(const std::string &config_path);
     ~Server();
     void send_img_all(void *data, size_t size, uint32_t time, uint32_t seq) const;
