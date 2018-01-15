@@ -8,6 +8,7 @@ set(ServerSource server.cpp server.h)
 set(ConnSource conn.cpp conn.h)
 set(SocketSource socket.cpp socket.h)
 set(UtilitySource utility.cpp utility.h json11.cpp json11.hpp)
+set(CameraSource camera.cpp camera.h)
 
 add_library(Server ${ServerSource})
 target_link_libraries(Server Socket Conn Utility pthread)
@@ -19,8 +20,13 @@ add_library(Conn ${ConnSource})
 
 add_library(Utility ${UtilitySource})
 
+add_library(Camera ${CameraSource})
+target_link_libraries(Camera uvc)
+
+
+
 add_executable(main main.cpp)
-target_link_libraries(main Utility)
+target_link_libraries(main uvc)
 add_custom_command(
         TARGET main PRE_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
@@ -70,6 +76,9 @@ if(CXXTEST_FOUND)
     add_library(FakeClient test/fake_client.cpp test/fake_client.h)
     target_link_libraries(FakeClient Socket Utility)
     add_library(MockCamera test/mock_camera.cpp test/mock_camera.h)
+
+    CXXTEST_ADD_TEST(camera_test camera_test.cpp ${CMAKE_CURRENT_SOURCE_DIR}/test/camera_test.h)
+    target_link_libraries(camera_test Camera Server)
 
 
 endif()

@@ -12,6 +12,7 @@
 namespace Skagway {
 
 const static uint16_t ms_per_s = 1000;
+const static uint16_t us_per_ms = 1000;
 const static uint32_t ns_per_ms = 1000000;
 
 uint32_t current_time() {
@@ -22,6 +23,13 @@ uint32_t current_time() {
 
     // Truncate if value can't fit into uint32_t
     rv = (uint32_t)time.tv_sec * ms_per_s + (uint32_t)(time.tv_nsec / ns_per_ms);
+    return rv;
+}
+
+uint32_t time_val_to_time(timeval time) {
+    uint32_t rv;
+
+    rv = (uint32_t)time.tv_sec * ms_per_s + (uint32_t)(time.tv_usec / us_per_ms);
     return rv;
 }
 
