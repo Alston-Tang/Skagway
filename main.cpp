@@ -1,20 +1,16 @@
-#include <vector>
-#include <iostream>
-#include <fstream>
+#include <unistd.h>
 #include "server.h"
-#include "utility.h"
-
+#include "camera.h"
 
 int main() {
-    Skagway::Json json;
-    bool success = Skagway::parse_config_file("config.json", json);
-    auto sockets = json["socketd"].array_items();
+    const static uint16_t vid = 0x058f;
+    const static uint16_t pid = 0x0362;
 
-    std::cout << sockets.size();
+    Skagway::Server server("test_config_1.json");
+    Skagway::Camera camera(&server, vid, pid, UVC_FRAME_FORMAT_MJPEG, 1280, 720, 30);
 
-    for (auto &item : sockets) {
-        std::cout << item.type();
-    }
+    server.start_loop();
+    camera.start_streaming();
 
-    return 0;
+    sleep(6000);
 }

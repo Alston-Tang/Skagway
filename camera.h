@@ -10,7 +10,7 @@
 
 namespace Skagway {
     class Camera {
-        static uvc_context_t *uvc_ctx = nullptr;
+        static uvc_context_t *uvc_ctx;
 
         const Skagway::Server *server;
 

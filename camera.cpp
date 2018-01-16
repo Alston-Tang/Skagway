@@ -2,7 +2,10 @@
 // Created by tang on 1/15/18.
 //
 
+#include <libuvc/libuvc.h>
 #include "camera.h"
+
+uvc_context_t *Skagway::Camera::uvc_ctx = nullptr;
 
 bool Skagway::Camera::init() {
     if (Camera::uvc_ctx == nullptr) {
@@ -69,19 +72,20 @@ Skagway::Camera::~Camera() {
 
 bool Skagway::Camera::set_format(uvc_frame_format format, int width, int height, int fps) {
     uvc_error_t res;
-
-    res = uvc_get_stream_ctrl_format_size(this->dev_handle, &ctrl, this->format, this->width, this->height, this->fps);
+    res = uvc_get_stream_ctrl_format_size(this->dev_handle, &this->ctrl, this->format, this->width, this->height, this->fps);
     if (res < 0) {
         //TODO Handle Error
         uvc_perror(res, "get_mode");
         return false;
     }
 
+    uvc_print_stream_ctrl(&this->ctrl, stderr);
+
     return true;
 }
 
 bool Skagway::Camera::start_streaming() {
-    uvc_start_streaming(this->dev_handle, &this->ctrl, Camera::cb, const_cast<void*>(this->server), 0);
+    uvc_start_streaming(this->dev_handle, &this->ctrl, Camera::cb, const_cast<Server*>(this->server), 0);
 }
 
 bool Skagway::Camera::stop_streaming() {

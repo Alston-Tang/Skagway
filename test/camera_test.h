@@ -1,5 +1,6 @@
 #include <cxxtest/TestSuite.h>
 #include <arpa/inet.h>
+#include <unistd.h>
 #include "../conn.h"
 #include "../socket.h"
 #include "../server.h"
@@ -18,5 +19,7 @@ public:
 
         server.start_loop();
         camera.start_streaming();
+
+        sleep(6000);
     }
 };
